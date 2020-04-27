@@ -22,7 +22,6 @@ class DashboardSkill(MycroftSkill):
     # The constructor of the skill, which calls MycroftSkill's constructor
     def __init__(self):
         super(DashboardSkill, self).__init__(name="Dashboard")
-
         
 
     @intent_handler(IntentBuilder("").require("Open").require("Dashboard"))
@@ -32,19 +31,29 @@ class DashboardSkill(MycroftSkill):
         if uri.strip():
             self.speak_dialog("dashboard.already.active")
         else:
+            self.speak_dialog("opening.dashboard")
             os.system('/usr/bin/python3 ~/Desktop/RPiDashboard/main.py')
-            #self.speak_dialog("active")
 
-    @intent_handler(IntentBuilder("").require("Background").require("Colour"))
-    def handle_change_background_colour_intent(self, message):
+    @intent_handler(IntentBuilder("").require("Visibility").require("Widget"))
+    def handle_show_hide_intent(self, message):
         with open("uri.txt", 'r') as myfile:
             uri = myfile.read()
         try:
             app = Pyro4.Proxy(uri)
-            if message.data["Colour"] == "red":
-                app.change_background_to_red()
+            if message.data["Visibility"] == "show":
+                vis = 1
             else:
-                app.change_background_to_blue()
+                vis = 0
+            if message.data["Widget"] == "all":
+                app.showHideAllWidgets(vis)
+            elif message.data["Widget"] == "calendar":
+                app.showHideCalendar(vis)
+            elif message.data["Widget"] == "clock":
+                app.showHideClock(vis)
+            elif message.data["Widget"] == "weather":
+                app.showHideWeather(vis)
+            elif message.data["Widget"] == "command":
+                app.showHideCommandDisplay(vis)
         except:
             print("Pyro could not create connection")
     
