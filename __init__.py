@@ -25,14 +25,16 @@ class DashboardSkill(MycroftSkill):
         
 
     @intent_handler(IntentBuilder("").require("Open").require("Dashboard"))
-    def handle_dashboard_control_itnent(self, message):
+    def handle_dashboard_control_intent(self, message):
         with open("uri.txt", 'r') as myfile:
             uri = myfile.read()
         if uri.strip():
-            self.speak_dialog("dashboard.already.active")
+            pass
+            #self.speak_dialog("dashboard.already.active")
         else:
-            self.speak_dialog("opening.dashboard")
-            os.system('/usr/bin/python3 ~/Desktop/RPiDashboard/main.py')
+            #self.speak_dialog("opening.dashboard")
+            os.system('lxterminal -e /usr/bin/python3 ~/Desktop/RPiDashboard/main.py')
+            #os.system('/usr/bin/python3 ~/Desktop/RPiDashboard/main.py')
 
     @intent_handler(IntentBuilder("").require("Visibility").require("Widget"))
     def handle_show_hide_intent(self, message):
@@ -54,6 +56,8 @@ class DashboardSkill(MycroftSkill):
                 app.showHideWeather(vis)
             elif message.data["Widget"] == "command":
                 app.showHideCommandDisplay(vis)
+            elif message.data["Widget"] == "notes":
+                app.showHideNotes(vis)
         except:
             print("Pyro could not create connection")
     
@@ -69,8 +73,40 @@ class DashboardSkill(MycroftSkill):
     def reset_intent(self, message):
         text_file = open("uri.txt", "w")
         text_file.write("")
-        text_file.close()   
-
+        text_file.close()
+    
+    @intent_handler(IntentBuilder("").require("Note").require("Modify"))        
+    def modify_note_intent(self, message):
+        if message.data["Modify"] == "add":
+            with open("uri.txt", 'r') as myfile:
+                uri = myfile.read()
+            try:
+                utterance = message.data.get('utterance')
+                app = Pyro4.Proxy(uri)
+                app.addNote(utterance)
+            except:
+                print("Pyro could not create connection")
+        else:
+            with open("uri.txt", 'r') as myfile:
+                uri = myfile.read()
+            try:
+                utterance = message.data.get('utterance')
+                app = Pyro4.Proxy(uri)
+                app.removeNote(utterance)
+            except:
+                print("Pyro could not create connection")
+        
+        
+        
+    @intent_handler(IntentBuilder("").require("Clear").require("Note"))        
+    def clear_note_intent(self, message):
+        with open("uri.txt", 'r') as myfile:
+            uri = myfile.read()
+        try:
+            app = Pyro4.Proxy(uri)
+            app.clearNote()
+        except:
+            print("Pyro could not create connection")
 
     # The "stop" method defines what Mycroft does when told to stop during
     # the skill's execution. In this case, since the skill's functionality
